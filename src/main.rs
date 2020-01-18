@@ -1,13 +1,14 @@
 #[macro_use]
 extern crate log;
 use lazy_static::lazy_static;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::thread;
 use crate::core::Purifier;
 use pretty_env_logger::init;
 use std::time::Duration;
 
 mod core;
+mod view;
 use imap::error::Error;
 use std::panic;
 
@@ -20,12 +21,16 @@ lazy_static! {
     };
 }
 
+
 use iron::prelude::*;
 use iron::status;
+use iron::{mime, mime::{Mime, SubLevel, TopLevel}};
+use crate::view::Info;
 
 fn counter(_: &mut Request) -> IronResult<Response> {
     let purifier = PURIFIER.lock().unwrap();
-    Ok(Response::with((status::Ok, format!("{}", purifier.counter()))))
+    let json: Mime = "application/json".parse().unwrap();
+    Ok(Response::with((status::Ok, json, format!("{}", purifier.info().json()))))
 }
 
 fn main() {

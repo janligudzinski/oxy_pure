@@ -2,6 +2,7 @@ use imap::{connect, Session};
 use native_tls::{TlsConnector, TlsStream};
 use std::net::TcpStream;
 use rustyknife::rfc2047::encoded_word;
+use chrono::{DateTime, Utc};
 use super::ImapError;
 type ImapSession = Session<TlsStream<TcpStream>>;
 
@@ -15,16 +16,20 @@ pub struct Purifier {
     password: String,
     /// How many e-mails have been deleted.
     counter: usize,
+    /// When the service launched.
+    since: DateTime<Utc>
 }
 
 impl Purifier {
     pub fn counter(&self) -> usize {self.counter}
+    pub fn since(&self) -> DateTime<Utc> {self.since.clone()}
     pub fn new() -> Self {
         use std::env::var;
         Self {
             username: var("O2_USERNAME").expect("The O2_USERNAME environment variable must be set."),
             password: var("O2_PASSWORD").expect("The O2_PASSWORD environment variable must be set."),
-            counter: 0
+            counter: 0,
+            since: Utc::now()
         }
     }
     fn session(&self) -> ImapSession {
