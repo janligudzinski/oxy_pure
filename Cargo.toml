@@ -1,0 +1,11 @@
+[package]
+name = "oxy_pure"
+version = "0.1.0"
+authors = ["oreganoli <3611916+oreganoli@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+imap = "1.0.2"
+pretty_env_logger = "0.3.1"
