@@ -9,7 +9,6 @@ use std::time::Duration;
 
 mod core;
 mod view;
-use imap::error::Error;
 use std::panic;
 
 type ImapError = imap::error::Error;
@@ -23,26 +22,47 @@ lazy_static! {
 
 
 use iron::prelude::*;
-use iron::status;
+use iron::{status, IronError};
 use iron::{mime, mime::{Mime, SubLevel, TopLevel}};
 use crate::view::Info;
+use std::fmt::Formatter;
 
-fn counter(_: &mut Request) -> IronResult<Response> {
+#[derive(Debug)]
+struct MyError {}
+impl std::fmt::Display for MyError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), ::core::fmt::Error> {
+        write!(f, "placeholder type to satisfy Iron")?;
+        Ok(())
+    }
+}
+impl std::error::Error for MyError {
+
+}
+
+fn handler(req: &mut Request) -> IronResult<Response> {
     let purifier = PURIFIER.lock().unwrap();
-    let json: Mime = "application/json".parse().unwrap();
-    Ok(Response::with((status::Ok, json, format!("{}", purifier.info().json()))))
+    let path = req.url.path();
+    dbg!(&path);
+    if path.len() > 1 {
+        Err(IronError::new(MyError {}, (status::NotFound, "NOT FOUND")))
+    } else if path[0] == "info" {
+        let json: Mime = "application/json".parse().unwrap();
+        Ok(Response::with((status::Ok, json, format!("{}", purifier.info().json()))))
+    } else {
+        Err(IronError::new(MyError {}, (status::NotFound, "NOT FOUND")))
+    }
 }
 
 fn main() {
     init();
-    let _server = Iron::new(counter).http("localhost:3000").unwrap();
+    let _server = Iron::new(handler).http("localhost:3000").unwrap();
     thread::spawn(move || {
         loop {
             {
                 let mut purifier = PURIFIER.lock().unwrap();
                 purifier.run().err().and_then(|im| {
                     match im {
-                        Error::No(msg) => {
+                        ImapError::No(msg) => {
                             error!("The server returned a NO response.");
                             error!("This is probably an internal error, so the program will wait and try later.");
                             error!("{}", msg);
