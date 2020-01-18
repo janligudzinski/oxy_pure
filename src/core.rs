@@ -3,6 +3,7 @@ use native_tls::{TlsConnector, TlsStream};
 use std::error::Error;
 use std::net::TcpStream;
 use std::fmt::Display;
+use rustyknife::rfc2047::encoded_word;
 use imap::types::Mailbox;
 
 type ImapError = imap::error::Error;
@@ -68,6 +69,7 @@ impl Purifier {
             };
             for address in from {
                 if let Some(name) = address.name {
+                    let (_, name) = encoded_word(name.as_bytes()).unwrap();
                     if name.contains("/o2") || name.contains("/ o2") {
                         return true
                     }
