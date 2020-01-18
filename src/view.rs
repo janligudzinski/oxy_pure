@@ -21,3 +21,7 @@ impl Info {
         format!("{{\"since\": \"{}\", \"counter\": {}}}", &self.since, self.counter)
     }
 }
+
+pub fn view(info: &Info) -> String {
+    Template::new(include_str!("index.html")).unwrap().render(info)
+}

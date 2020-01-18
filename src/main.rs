@@ -48,6 +48,9 @@ fn handler(req: &mut Request) -> IronResult<Response> {
     } else if path[0] == "info" {
         let json: Mime = "application/json".parse().unwrap();
         Ok(Response::with((status::Ok, json, format!("{}", purifier.info().json()))))
+    } else if path[0].is_empty() {
+        let html: Mime = "text/html".parse().unwrap();
+        Ok(Response::with((status::Ok, html, view::view(&purifier.info()))))
     } else {
         Err(IronError::new(MyError {}, (status::NotFound, "NOT FOUND")))
     }
