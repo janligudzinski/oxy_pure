@@ -20,9 +20,17 @@ lazy_static! {
     };
 }
 
+use iron::prelude::*;
+use iron::status;
+
+fn counter(_: &mut Request) -> IronResult<Response> {
+    let purifier = PURIFIER.lock().unwrap();
+    Ok(Response::with((status::Ok, format!("{}", purifier.counter()))))
+}
+
 fn main() {
     init();
-
+    let _server = Iron::new(counter).http("localhost:3000").unwrap();
     thread::spawn(move || {
         loop {
             {
