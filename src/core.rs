@@ -1,9 +1,12 @@
+use std::net::TcpStream;
+
+use chrono::{DateTime, Utc};
 use imap::{connect, Session};
 use native_tls::{TlsConnector, TlsStream};
-use std::net::TcpStream;
 use rustyknife::rfc2047::encoded_word;
-use chrono::{DateTime, Utc};
+
 use super::ImapError;
+
 type ImapSession = Session<TlsStream<TcpStream>>;
 
 const SERVER: &str = "poczta.o2.pl";
@@ -14,6 +17,8 @@ pub struct Purifier {
     username: String,
     /// The password used to connect to the server.
     password: String,
+    /// How many milliseconds to wait between deletions.
+    wait_period: u64,
     /// How many e-mails have been deleted.
     counter: usize,
     /// When the service launched.
@@ -23,11 +28,13 @@ pub struct Purifier {
 impl Purifier {
     pub fn counter(&self) -> usize {self.counter}
     pub fn since(&self) -> DateTime<Utc> {self.since.clone()}
+    pub fn wait_period(&self) -> u64 {self.wait_period}
     pub fn new() -> Self {
         use std::env::var;
         Self {
             username: var("O2_USERNAME").expect("The O2_USERNAME environment variable must be set."),
             password: var("O2_PASSWORD").expect("The O2_PASSWORD environment variable must be set."),
+            wait_period: var("WAIT_PERIOD").expect("The WAIT_PERIOD environment variable must be set.").parse().unwrap(),
             counter: 0,
             since: Utc::now()
         }
