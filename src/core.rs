@@ -18,6 +18,7 @@ pub struct Purifier {
 }
 
 impl Purifier {
+    pub fn counter(&self) -> usize {self.counter}
     pub fn new() -> Self {
         use std::env::var;
         Self {
