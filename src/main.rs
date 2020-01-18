@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate log;
 use lazy_static::lazy_static;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use std::thread;
 use crate::core::Purifier;
 use pretty_env_logger::init;
@@ -10,8 +10,6 @@ use std::time::Duration;
 mod core;
 use imap::error::Error;
 use std::panic;
-use std::borrow::{BorrowMut, Borrow};
-use std::ops::Deref;
 
 type ImapError = imap::error::Error;
 

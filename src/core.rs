@@ -1,10 +1,7 @@
-use imap::{connect, Client, Session};
+use imap::{connect, Session};
 use native_tls::{TlsConnector, TlsStream};
-use std::error::Error;
 use std::net::TcpStream;
-use std::fmt::Display;
 use rustyknife::rfc2047::encoded_word;
-use imap::types::{Mailbox, Fetch};
 use super::ImapError;
 type ImapSession = Session<TlsStream<TcpStream>>;
 
