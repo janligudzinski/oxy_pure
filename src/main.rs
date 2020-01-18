@@ -1,3 +1,12 @@
+#[macro_use]
+extern crate log;
+
+use crate::core::Purifier;
+use pretty_env_logger::init;
+mod core;
+
 fn main() {
-    println!("Hello, world!");
+    init();
+    let purifier = Purifier::new();
+    let _session = purifier.session();
 }
