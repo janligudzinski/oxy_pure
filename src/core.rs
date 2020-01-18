@@ -3,6 +3,10 @@ use native_tls::{TlsConnector, TlsStream};
 use std::error::Error;
 use std::net::TcpStream;
 use std::fmt::Display;
+use imap::types::Mailbox;
+
+type ImapError = imap::error::Error;
+type ImapSession = Session<TlsStream<TcpStream>>;
 
 const SERVER: &str = "poczta.o2.pl";
 const PORT: u16 = 993;
@@ -22,7 +26,7 @@ impl Purifier {
             password: var("O2_PASSWORD").expect("The O2_PASSWORD environment variable must be set.")
         }
     }
-    pub fn session(&self) -> Session<TlsStream<TcpStream>> {
+    fn session(&self) -> ImapSession {
         let tls = TlsConnector::builder().build().unwrap();
         let client = match connect((SERVER, PORT), SERVER, &tls) {
             Ok(client) => {
@@ -44,6 +48,67 @@ impl Purifier {
                 error!("Could not log in, exiting!");
                 error!("Error message: {:#?}", e);
                 std::process::exit(2)
+            }
+        }
+    }
+    pub fn get_spam(&self) -> Result<(), ImapError> {
+        let session = &mut self.session();
+        get_inbox(session)?;
+        let fetched = session.fetch("1:*", "UID ENVELOPE")?;
+        let count = fetched.iter().count();
+        info!("Found {} messages in the inbox.", count);
+        let messages = fetched.iter().filter(|msg| {
+            let envelope = match msg.envelope() {
+                Some(env) => env,
+                None => return false
+            };
+            let from = match &envelope.from {
+                Some(from) => from,
+                None => return false
+            };
+            for address in from {
+                if let Some(name) = address.name {
+                    if name.contains("/o2") || name.contains("/ o2") {
+                        return true
+                    }
+                }
+            }
+            false
+        });
+        let messages = messages.collect::<Vec<_>>();
+        for message in messages.iter() {
+            info!("Found spam e-mail with UID {:#?}", message.uid);
+            if let Some(env) = message.envelope() {
+                if let Some(from) = &env.from {
+                    info!("addresses: {:#?}", from);
+                };
+                if let Some(sub) = &env.subject {
+                    info!("subject: {:#?}", sub);
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+fn get_inbox(session: &mut ImapSession) -> Result<Mailbox, ImapError> {
+    match session.select("INBOX") {
+        Ok(mailbox) => {
+            info!("Successfully got the inbox.");
+            Ok(mailbox)
+        },
+        Err(e) => {
+            match e {
+                ImapError::No(msg) => {
+                    warn!("The IMAP server responded with a NO. You should probably try again later");
+                    warn!("Error message: {}", &msg);
+                    return Err(ImapError::No(msg))
+                },
+                _ => {
+                    error!("The INBOX mailbox could not be gotten.");
+                    error!("Error message: {:#?}", e);
+                    std::process::exit(4);
+                }
             }
         }
     }
