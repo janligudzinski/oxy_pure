@@ -4,7 +4,7 @@ use std::error::Error;
 use std::net::TcpStream;
 use std::fmt::Display;
 use rustyknife::rfc2047::encoded_word;
-use imap::types::Mailbox;
+use imap::types::{Mailbox, Fetch};
 
 type ImapError = imap::error::Error;
 type ImapSession = Session<TlsStream<TcpStream>>;
@@ -52,9 +52,9 @@ impl Purifier {
             }
         }
     }
-    pub fn get_spam(&self) -> Result<(), ImapError> {
-        let session = &mut self.session();
+    pub fn get_spam(&self, session: &mut ImapSession) -> Result<Vec<&Fetch>, ImapError> {
         get_inbox(session)?;
+        info!("Fetching messages...");
         let fetched = session.fetch("1:*", "UID ENVELOPE")?;
         let count = fetched.iter().count();
         info!("Found {} messages in the inbox.", count);
@@ -89,7 +89,7 @@ impl Purifier {
                 }
             }
         }
-        Ok(())
+        Ok(messages)
     }
 }
 
