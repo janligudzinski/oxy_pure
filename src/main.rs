@@ -8,5 +8,4 @@ mod core;
 fn main() {
     init();
     let purifier = Purifier::new();
-    purifier.get_spam();
 }

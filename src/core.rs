@@ -52,7 +52,7 @@ impl Purifier {
             }
         }
     }
-    pub fn get_spam(&self, session: &mut ImapSession) -> Result<Vec<&Fetch>, ImapError> {
+    fn get_spam(&self, session: &mut ImapSession) -> Result<Vec<&Fetch>, ImapError> {
         get_inbox(session)?;
         info!("Fetching messages...");
         let fetched = session.fetch("1:*", "UID ENVELOPE")?;
