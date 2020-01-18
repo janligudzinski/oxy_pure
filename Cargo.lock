@@ -420,6 +420,7 @@ name = "oxy_pure"
 version = "0.1.0"
 dependencies = [
  "imap",
+ "lazy_static",
  "log",
  "native-tls",
  "pretty_env_logger",
