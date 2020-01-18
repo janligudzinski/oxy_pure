@@ -55,7 +55,7 @@ impl Purifier {
         }
     }
     fn get_spam_uids(&self, session: &mut ImapSession) -> Result<String, ImapError> {
-        get_inbox(session)?;
+        session.select("INBOX")?;
         let mut sequence = String::new();
         info!("Fetching messages...");
         for msg in session
@@ -110,28 +110,5 @@ impl Purifier {
         info!("Logging out...");
         session.logout().ok(); // the imap crate can't handle an "a4 BYE IMAP4rev1 Server logging out" response
         Ok(())
-    }
-}
-
-fn get_inbox(session: &mut ImapSession) -> Result<Mailbox, ImapError> {
-    match session.select("INBOX") {
-        Ok(mailbox) => {
-            info!("Successfully got the inbox.");
-            Ok(mailbox)
-        },
-        Err(e) => {
-            match e {
-                ImapError::No(msg) => {
-                    warn!("The IMAP server responded with a NO. You should probably try again later");
-                    warn!("Error message: {}", &msg);
-                    return Err(ImapError::No(msg))
-                },
-                _ => {
-                    error!("The INBOX mailbox could not be gotten.");
-                    error!("Error message: {:#?}", e);
-                    std::process::exit(4);
-                }
-            }
-        }
     }
 }
