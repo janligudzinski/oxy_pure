@@ -109,6 +109,8 @@ impl Purifier {
         self.delete_messages(&spam, session)?;
         info!("Logging out...");
         session.logout().ok(); // the imap crate can't handle an "a4 BYE IMAP4rev1 Server logging out" response
+        info!("Logged out.");
+        info!("The purifier has deleted {} messages since it started.", self.counter);
         Ok(())
     }
 }
