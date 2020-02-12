@@ -1,13 +1,16 @@
-language: rust
+language: minimal
 cache: cargo
-before_install:
-  docker pull clux/muslrust
-script:
-  docker run -v $PWD:/volume --rm -t clux/muslrust cargo build --release --verbose
+install: docker pull clux/muslrust
+script: docker run -v $PWD:/volume --rm -t clux/muslrust cargo build --release --verbose
 deploy:
   skip_cleanup: true
   provider: s3
   bucket: "oreganoli-builds"
-  upload-dir: "oxy_pure"
+  upload_dir: "oxy_pure"
   local_dir: "target/x86_64-unknown-linux-musl/release"
   file: "bootstrap"
+  region: eu-central-1
+env:
+  global:
+  - secure: MKgnBruhyY6BhGyqpzEJZmZYlYE2MxO9qtrwCzyQikuAfbyLO31LgzwnENhQy4HVUk4GiHnQskpYBaxiTZuFhO1IVQ4KUabIxUp0v4Top1m+FNXLJEfVig6ukFdgQK+MDnLYoVsoxqcXcEV2CVW9kOvPifd5zAq5FVMDmt1mk5NKgqvKcuUyLkGyWeSDdgGnTo8DbTFsVsjy2qeAIPMy9L/ubemvuaa1nZMg32X2M9KUI29Ce5tfnop3OkTIMcHV3j22nArAPxnKMF57fgB9Uhp5hQlQZ6ynoHyRbgVI9Ka9yRJAaWEIk8KzssMi93fPKQpAjD5umSTZkXfWP3GW7ZdBl8s+qfWIuegnV9MGLOkr6amSj4rIzUvp0pcZHGCXH29foHGuxymbtFng1hFD31ZdaxwQ2weSw9DADlFMytypdre5Q7slIakk3oQettih7cm5B0l9cLYETW+iQ8vbe1aazESiOqweve7ihTmuKtkR0g9gg+MkhndkrRbtc4mqzwtProzbNWEM4LZLjjU/D6+3wmtlb9YwgKZyRZw3InTHA1suiegE0vN3L/QAMPzsFqDH6X9taFRkiAR8xELNggVK0Kilh72EnJ1npctyagI7K/QThQ6PNaYLVcTq1hfmKu0V4AVXledLYqqeMcXX3Zd6gYMhVWgw4GHAz+yUrz0=
+  - secure: SpQkehYyDHfhc/bzXoM7iWHgelljbTVL4mKf75u7wFyXRWGX5CXuptMNXtT5KZihGZOQc5DAmM1cE4u5tOoVbJ4HXDiJa6z9qII2nb27Ts9w4n+nJzutSXmzUBMl2P9Iqa5iMJ2N4V5+e7I/9aqtQPrNkFok5B2FHMOqlPZ6DG3UlE48qtXeNkY4tYuc4dtOwAfNjZBAC1N2zcIL0cQ5KQaOA3tBt2x0W47xNCXTJAjGp/Rm2yTPSnkd3Tg6BdSHvxBfq8kDcIbQ25XKbcvl13sKJK2FPmPnxzbYn82k7DkvR/eHQxbCfpeBaqbPpmxtUuoV9qd3kijEyY/Q1YzVLBbNNfYiud0ZqQuPE5M7Xg0HyAURyeXF9/egrIMQWZXyzMYTnBszhAtDye2QincgBW2B0Q4O7hyhvkQabra/Au3/tzD5j4kkFnxrs/W2j0d88yAbwlyi6hc/YQ6817Vb2kDoydTRdZAY/M/N0bMhIypfv3ij2OGRjQ87ABz4DV8bpOiAsf+cIugMkwddtF4ADQYKyiACL6AaOjJSpUf33jONpfRb2W/rjgXOdHHxT+CeeN0j2AFoYJ8CyL8oDqVnuT2TRJHCWuPUpxRFas+SqKUUP9AZ3/Spbm3d+0lbkKCeKwdrtnqm+Z029XtHl+luXvU6SAbPt8JCdjmRL7iF0eI=
