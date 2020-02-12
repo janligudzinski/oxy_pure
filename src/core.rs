@@ -91,9 +91,9 @@ impl Purifier {
         &mut self,
         sequence: &str,
         session: &mut ImapSession,
-    ) -> Result<(), ImapError> {
+    ) -> Result<usize, ImapError> {
         if sequence.is_empty() {
-            return Ok(());
+            return Ok(0);
         }
         let mut set = String::new();
         let mut count = 0usize;
@@ -105,18 +105,18 @@ impl Purifier {
         session.expunge()?;
         info!("Success, {} messages permanently deleted.", count);
         //TODO add optional DB persistence for the counter
-        Ok(())
+        Ok(count)
     }
-    pub fn run(&mut self) -> Result<(), ImapError> {
+    pub fn run(&mut self) -> Result<usize, ImapError> {
         let now = Utc::now().to_rfc3339();
         info!("oxy_pure run at {}", now);
         info!("Acquiring session...");
         let session = &mut self.session();
         let spam = self.get_spam_uids(session)?;
-        self.delete_messages(&spam, session)?;
+        let count = self.delete_messages(&spam, session)?;
         info!("Logging out...");
         session.logout().ok(); // the imap crate can't handle an "a4 BYE IMAP4rev1 Server logging out" response
         info!("Logged out.");
-        Ok(())
+        Ok(count)
     }
 }
