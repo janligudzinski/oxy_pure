@@ -32,9 +32,12 @@ impl Purifier {
     fn session(&self) -> Result<ImapSession, ImapError> {
         let tls = TlsConnector::builder().build().unwrap();
         let client = connect((SERVER, PORT), SERVER, &tls)?;
-        info!("Successfully connected to poczta.o2.pl");
+        info!("Successfully connected to {}", SERVER);
         match client.login(&self.username, &self.password) {
-            Ok(ses) => Ok(ses),
+            Ok(ses) => {
+                info!("Authenticated as {}@{}", &self.username, SERVER);
+                Ok(ses)
+            },
             Err(e) => Err(e.0)
         }
     }
@@ -68,6 +71,7 @@ impl Purifier {
                 }
             }
         }
+        info!("Messages fetched, delete sequence written.");
         sequence.pop(); // remove the last trailing comma
         Ok(sequence)
     }
@@ -77,23 +81,26 @@ impl Purifier {
         session: &mut ImapSession,
     ) -> Result<usize, ImapError> {
         if sequence.is_empty() {
+            info!("No spam messages to delete.");
             return Ok(0);
         }
         let mut count = 0usize;
         count += sequence.split(",").count();
-        session.uid_store(sequence, "+FLAGS (\\Deleted)")?;
-        info!("Set the Deleted flag on {} messages.", count);
-        session.expunge()?;
-        info!("Expunged the mailbox.");
-        info!("Success, {} messages permanently deleted.", count);
+        if count > 0 {
+            session.uid_store(sequence, "+FLAGS (\\Deleted)")?;
+            info!("Set the Deleted flag on {} messages.", count);
+            session.expunge()?;
+            info!("Expunged the mailbox.");
+            info!("Success, {} messages permanently deleted.", count);
+        }
         //TODO add optional DB persistence for the counter
         Ok(count)
     }
     pub fn run(&mut self) -> Result<usize, ImapError> {
         let now = Utc::now().to_rfc3339();
         info!("oxy_pure run at {}", now);
-        info!("Acquiring session...");
         let session = &mut self.session()?;
+        info!("Acquired session.");
         let spam = self.get_spam_uids(session)?;
         let count = self.delete_messages(&spam, session)?;
         info!("Logging out...");
