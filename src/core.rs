@@ -17,110 +17,95 @@ pub struct Purifier {
     username: String,
     /// The password used to connect to the server.
     password: String,
-    /// How many milliseconds to wait between deletions.
-    wait_period: u64,
-    /// How many e-mails have been deleted.
-    counter: usize,
-    /// When the service launched.
-    since: DateTime<Utc>
 }
 
 impl Purifier {
-    pub fn counter(&self) -> usize {self.counter}
-    pub fn since(&self) -> DateTime<Utc> {self.since.clone()}
-    pub fn wait_period(&self) -> u64 {self.wait_period}
     pub fn new() -> Self {
         use std::env::var;
         Self {
-            username: var("O2_USERNAME").expect("The O2_USERNAME environment variable must be set."),
-            password: var("O2_PASSWORD").expect("The O2_PASSWORD environment variable must be set."),
-            wait_period: var("WAIT_PERIOD").expect("The WAIT_PERIOD environment variable must be set.").parse().unwrap(),
-            counter: 0,
-            since: Utc::now()
+            username: var("O2_USERNAME")
+                .expect("The O2_USERNAME environment variable must be set."),
+            password: var("O2_PASSWORD")
+                .expect("The O2_PASSWORD environment variable must be set."),
         }
     }
-    fn session(&self) -> ImapSession {
+    fn session(&self) -> Result<ImapSession, ImapError> {
         let tls = TlsConnector::builder().build().unwrap();
-        let client = match connect((SERVER, PORT), SERVER, &tls) {
-            Ok(client) => {
-                info!("Successfully connected to poczta.o2.pl");
-                client
-            },
-            Err(e) => {
-                error!("Failed to connect to poczta.o2.pl, exiting!");
-                error!("Error message: {:#?}", e);
-                std::process::exit(1)
-            }
-        };
+        let client = connect((SERVER, PORT), SERVER, &tls)?;
+        info!("Successfully connected to {}", SERVER);
         match client.login(&self.username, &self.password) {
-            Ok(session) => {
-                info!("Successfully authenticated.");
-                session
+            Ok(ses) => {
+                info!("Authenticated as {}@{}", &self.username, SERVER);
+                Ok(ses)
             },
-            Err(e) => {
-                error!("Could not log in, exiting!");
-                error!("Error message: {:#?}", e);
-                std::process::exit(2)
-            }
+            Err(e) => Err(e.0)
         }
     }
     fn get_spam_uids(&self, session: &mut ImapSession) -> Result<String, ImapError> {
         session.select("INBOX")?;
         let mut sequence = String::new();
         info!("Fetching messages...");
-        for msg in session
-            .fetch("1:*", "UID ENVELOPE")?
-            .into_iter() {
+        for msg in session.fetch("1:*", "UID ENVELOPE")?.into_iter() {
             let envelope = match msg.envelope() {
                 Some(env) => env,
-                None => continue
+                None => continue,
             };
             let from = match &envelope.from {
                 Some(from) => from,
-                None => continue
+                None => continue,
             };
             let uid = match msg.uid {
                 Some(u) => u,
-                None => continue
+                None => continue,
             };
             for address in from {
                 if let Some(name) = address.name {
                     let (_, name) = encoded_word(name.as_bytes()).unwrap();
                     if name.contains("/o2") || name.contains("/ o2") {
-                        info!("Found a spam message with the sender name {:?} and UID {}", name, uid);
+                        info!(
+                            "Found a spam message with the sender name {:?} and UID {}",
+                            name, uid
+                        );
                         sequence.push_str(&format!("{},", uid));
                     }
                 }
             }
         }
+        info!("Messages fetched, delete sequence written.");
         sequence.pop(); // remove the last trailing comma
         Ok(sequence)
     }
-    fn delete_messages(&mut self, sequence: &str, session: &mut ImapSession) -> Result<(), ImapError> {
+    fn delete_messages(
+        &mut self,
+        sequence: &str,
+        session: &mut ImapSession,
+    ) -> Result<usize, ImapError> {
         if sequence.is_empty() {
-            return Ok(())
+            info!("No spam messages to delete.");
+            return Ok(0);
         }
-        let mut set = String::new();
         let mut count = 0usize;
         count += sequence.split(",").count();
-        set.pop(); // remove the final trailing comma
-        info!("Setting the Deleted flag on {} messages...", count);
-        session.uid_store(sequence, "+FLAGS (\\Deleted)")?;
-        info!("Expunging the mailbox...");
-        session.expunge()?;
-        info!("Success, {} messages permanently deleted.", count);
-        self.counter += count;
-        Ok(())
+        if count > 0 {
+            session.uid_store(sequence, "+FLAGS (\\Deleted)")?;
+            info!("Set the Deleted flag on {} messages.", count);
+            session.expunge()?;
+            info!("Expunged the mailbox.");
+            info!("Success, {} messages permanently deleted.", count);
+        }
+        //TODO add optional DB persistence for the counter
+        Ok(count)
     }
-    pub fn run(&mut self) -> Result<(), ImapError> {
-        info!("Acquiring session...");
-        let session = &mut self.session();
+    pub fn run(&mut self) -> Result<usize, ImapError> {
+        let now = Utc::now().to_rfc3339();
+        info!("oxy_pure run at {}", now);
+        let session = &mut self.session()?;
+        info!("Acquired session.");
         let spam = self.get_spam_uids(session)?;
-        self.delete_messages(&spam, session)?;
+        let count = self.delete_messages(&spam, session)?;
         info!("Logging out...");
         session.logout().ok(); // the imap crate can't handle an "a4 BYE IMAP4rev1 Server logging out" response
         info!("Logged out.");
-        info!("The purifier has deleted {} messages since it started.", self.counter);
-        Ok(())
+        Ok(count)
     }
 }
