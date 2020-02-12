@@ -1,4 +1,6 @@
 # oxy_pure
+![Build status](https://travis-ci.org/oreganoli/oxy_pure.svg?branch=master)
+
 An automatic spam deleter for o2.pl email accounts running on AWS Lambda.
 ## Motivation
 The Polish mail provider o2 is funded by ads. These ads arrive directly in a user's inbox. Unlike the targeted ads enabled by Google or Facebook's algorithms,
@@ -18,4 +20,4 @@ Build for a `musl` target with the provided `build-release` command in the Justf
 Set the `O2_USERNAME` environment variable to your o2 username (unlike with Gmail accounts, without the "@o2.pl" suffix), set `O2_PASSWORD` and, if you want verbose logs,
 set `RUST_LOG` to `INFO`. 
 
-Set a CloudWatch timer event to trigger the function every few minutes. In the author's experience, the function takes on average 4 seconds to execute, 7 at most.
+Set a CloudWatch timer event to trigger the function every few minutes. In the author's experience, the function takes on average 4.5 seconds to execute.
