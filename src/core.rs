@@ -29,29 +29,13 @@ impl Purifier {
                 .expect("The O2_PASSWORD environment variable must be set."),
         }
     }
-    fn session(&self) -> ImapSession {
+    fn session(&self) -> Result<ImapSession, ImapError> {
         let tls = TlsConnector::builder().build().unwrap();
-        let client = match connect((SERVER, PORT), SERVER, &tls) {
-            Ok(client) => {
-                info!("Successfully connected to poczta.o2.pl");
-                client
-            }
-            Err(e) => {
-                error!("Failed to connect to poczta.o2.pl, exiting!");
-                error!("Error message: {:#?}", e);
-                std::process::exit(1)
-            }
-        };
+        let client = connect((SERVER, PORT), SERVER, &tls)?;
+        info!("Successfully connected to poczta.o2.pl");
         match client.login(&self.username, &self.password) {
-            Ok(session) => {
-                info!("Successfully authenticated.");
-                session
-            }
-            Err(e) => {
-                error!("Could not log in, exiting!");
-                error!("Error message: {:#?}", e);
-                std::process::exit(2)
-            }
+            Ok(ses) => Ok(ses),
+            Err(e) => Err(e.0)
         }
     }
     fn get_spam_uids(&self, session: &mut ImapSession) -> Result<String, ImapError> {
@@ -95,14 +79,12 @@ impl Purifier {
         if sequence.is_empty() {
             return Ok(0);
         }
-        let mut set = String::new();
         let mut count = 0usize;
         count += sequence.split(",").count();
-        set.pop(); // remove the final trailing comma
-        info!("Setting the Deleted flag on {} messages...", count);
         session.uid_store(sequence, "+FLAGS (\\Deleted)")?;
-        info!("Expunging the mailbox...");
+        info!("Set the Deleted flag on {} messages.", count);
         session.expunge()?;
+        info!("Expunged the mailbox.");
         info!("Success, {} messages permanently deleted.", count);
         //TODO add optional DB persistence for the counter
         Ok(count)
@@ -111,7 +93,7 @@ impl Purifier {
         let now = Utc::now().to_rfc3339();
         info!("oxy_pure run at {}", now);
         info!("Acquiring session...");
-        let session = &mut self.session();
+        let session = &mut self.session()?;
         let spam = self.get_spam_uids(session)?;
         let count = self.delete_messages(&spam, session)?;
         info!("Logging out...");
