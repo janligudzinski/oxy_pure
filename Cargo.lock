@@ -42,6 +42,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8aac770f1885fd7e387acedd76065302551364496e46b3dd00860b2f8359b9d"
 
 [[package]]
+name = "aws_lambda_events"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f349fc32542c86061159d5abc2ce0f626d5bb3785077fe1e2cb4575d7e00a1d1"
+dependencies = [
+ "base64 0.9.3",
+ "bytes",
+ "chrono",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -61,6 +75,16 @@ checksum = "5d6575f128516de27e3ce99689419835fce9643a9b215a14d2b5b685be018491"
 dependencies = [
  "cc",
  "libc",
+]
+
+[[package]]
+name = "base64"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "489d6c0ed21b11d038c31b6ceccca973e65d73ba3bd8ecb9a2babf5546164643"
+dependencies = [
+ "byteorder",
+ "safemem",
 ]
 
 [[package]]
@@ -99,6 +123,7 @@ dependencies = [
  "byteorder",
  "either",
  "iovec",
+ "serde",
 ]
 
 [[package]]
@@ -130,6 +155,7 @@ checksum = "31850b4a4d6bae316f7a09e691c944c28299298837edc0a03f755618c23cbc01"
 dependencies = [
  "num-integer",
  "num-traits",
+ "serde",
  "time",
 ]
 
@@ -484,7 +510,7 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "178392198cb2716f4fe34b86a1bf1de1240a3e31136a199b16490fa87538fa25"
 dependencies = [
- "base64",
+ "base64 0.10.1",
  "bufstream",
  "chrono",
  "imap-proto",
@@ -849,6 +875,7 @@ dependencies = [
 name = "oxy_pure"
 version = "0.1.0"
 dependencies = [
+ "aws_lambda_events",
  "chrono",
  "imap",
  "lambda_runtime",
@@ -858,6 +885,7 @@ dependencies = [
  "native-tls",
  "pretty_env_logger",
  "rustyknife",
+ "serde",
 ]
 
 [[package]]
@@ -1046,7 +1074,7 @@ version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ece1e4d47a589d7218513929d586d287ff408e9c6c9078023bf1de5ccf420b0f"
 dependencies = [
- "base64",
+ "base64 0.10.1",
  "encoding",
  "idna",
  "nom 5.1.0",
@@ -1057,6 +1085,12 @@ name = "ryu"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa8506c1de11c9c4e4c38863ccbe02a305c8188e85a05a784c9e11e1c3910c8"
+
+[[package]]
+name = "safemem"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
 
 [[package]]
 name = "schannel"
@@ -1115,6 +1149,9 @@ name = "serde"
 version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "414115f25f818d7dfccec8ee535d76949ae78584fc4f79a6f45a904bf8ab4449"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_derive"
