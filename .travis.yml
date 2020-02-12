@@ -8,8 +8,6 @@ deploy:
   skip_cleanup: true
   provider: s3
   bucket: "oreganoli-builds"
-  access_key_id: "TODO"
-  secret_access_key: "TODO"
   upload-dir: "oxy_pure"
   local_dir: "target/x86_64-unknown-linux-musl/release"
   file: "bootstrap"
