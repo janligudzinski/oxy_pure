@@ -4,7 +4,7 @@ install: docker pull clux/muslrust
 script: docker run -v $PWD:/volume --rm -t clux/muslrust cargo build --release --verbose
 before_deploy:
   mkdir deployment;
-  mv ./target/x86_64-unknown-linux-musl/release/bootstrap ./deployment
+  mv ./target/x86_64-unknown-linux-musl/release/bootstrap ./deployment/bootstrap
 deploy:
   skip_cleanup: true
   provider: s3
