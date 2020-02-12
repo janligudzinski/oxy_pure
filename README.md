@@ -11,10 +11,10 @@ The server-side filtering o2 provides makes an exception for these spam e-mails 
 
 Due to various reasons, switching providers might not always be an option.
 
-Thus, oxy_pure was born, initially as a .NET Core application based on MailKit. While effective, it required a constantly-running server and was prone to crashing if o2 returned a bad response for whatever reason.
+Thus, oxy_pure was born, initially as a .NET Core application based on [MailKit](https://github.com/jstedfast/MailKit). While effective, it required a constantly-running server and was prone to crashing if o2 returned a bad response for whatever reason.
 Therefore, I have rewritten oxy_pure as an AWS Lambda function that only runs - and costs money - at chosen times.
 ## Compilation and usage
-Install and enable Docker to make use of the Rust-for-musl image. Install [`just`](https://github.com/casey/just/)
+Install and enable Docker to make use of the Rust-for-musl image. Install [`just`](https://github.com/casey/just/).
 Build for a `musl` target with the provided `build-release` command in the Justfile, zip up the resulting executable and upload to an AWS Lambda function.
 
 Set the `O2_USERNAME` environment variable to your o2 username (unlike with Gmail accounts, without the "@o2.pl" suffix), set `O2_PASSWORD` and, if you want verbose logs,
