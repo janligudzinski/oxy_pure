@@ -7,6 +7,10 @@ before_deploy: |
   mkdir deployment
   sudo chown $USER ./target/x86_64-unknown-linux-musl/release/bootstrap
   sudo mv ./target/x86_64-unknown-linux-musl/release/bootstrap ./deployment/bootstrap
+  cd deployment
+  sudo zip bootstrap bootstrap
+  sudo rm bootstrap
+  cd ..
 deploy:
   skip_cleanup: true
   provider: s3
